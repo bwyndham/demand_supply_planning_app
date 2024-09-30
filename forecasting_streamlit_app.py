@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import datetime as dt
-import logging
 import gspread
 
 @st.cache_data
@@ -32,7 +31,8 @@ def write_to_gsheet(filename, data):
 st.title("Demand and Supply Planning App")
 mkdwn = '''Welcome to the Demand and Supply Planning App.  
 
-The purpose of this app is to provide high quality, automatic demand forecasting and supply planning via a simple interface. This app uses the Nixtla, Streamlit, Pandas, Gspread and Plotly Python libraries.  
+The purpose of this app is to provide automatic, high-quality, hierarchical demand forecasting and supply planning via a simple interface. This app uses the Nixtla, Streamlit, Pandas, Gspread and Plotly Python libraries. 
+Using Nixtla's efficient algorithms and multi-threading, this app forecasts 50k series from the M5 dataset in minutes on a machine with 16GB of memory and 12 CPU cores.  
 
 If you have any feedback or suggestions, please let me know via the feedback form or my [website](https://benjaminwyndham.com/).'''
 st.markdown(mkdwn)
