@@ -41,11 +41,11 @@ The purpose of this app is to provide automatic, high-quality, hierarchical dema
 
 The forecasts are driven by an ML and Statistical forecaster that selects the best model for each time series, based on crossvalidation performance across 10, 6 week folds. This forecaster uses a wide selection of models such as LightGBM, Croston, HoltWinters, and ETS. Code can be found on [github](https://github.com/bwyndham/demand_supply_planning_app/blob/main/ml-forecaster.ipynb).
 
-This app uses the Nixtla, LightGBM, Streamlit, Pandas, Gspread and Plotly Python libraries.  
+This app uses the Nixtla, LightGBM, Streamlit, Pandas, Gspread and Plotly Python libraries. The sales data is from the M5 Forecasting competition dataset.
 
 If you have any feedback or suggestions, please let me know via the feedback form or my [website](https://benjaminwyndham.com/).'''
 st.markdown(mkdwn)
-tab1, tab2, tab3 = st.tabs(['Demand Planning','Supply Planning','Feedback'])
+tab1, tab2 = st.tabs(['Demand Planning','Feedback'])
 # hardcoded, need to refactor to get user input and save in this format
 categorial_columns = ["state_id","store_id","cat_id","dept_id"]
 item_column = 'item_id'
@@ -146,64 +146,6 @@ with tab1:
                         mime="text/csv")
 
 with tab2:
-     oh_df= read_from_gsheet_to_df("on_hand_supply_planning")
-     demand_df = df.groupby(by='unique_id').sum(forecast_column).reset_index()
-     compare = supply_calculation(oh_df, demand_df)
-     hist_start = hist_df['ds'].max() - dt.timedelta(weeks=4)
-     st.warning("For simplicity, 0 week lead time is assumed. In practice that is rarely, if ever, the case.")
-     
-     groups = ttl_df[categorial_columns].columns.to_list()
-     group_choices = []
-     group_choice = st.selectbox('Select Group By',groups, key="groups_supply")
-     group_choices.append(group_choice)
-     
-     choices = {}
-     ncol = len(ttl_df[categorial_columns].columns)
-     cols = st.columns(ncol)
-     for i, x in enumerate(cols):
-          key = str(ttl_df[categorial_columns].columns[i])
-          choice = x.multiselect(f'Select {ttl_df[categorial_columns].columns[i]}', ttl_df[ttl_df[categorial_columns].columns[i]].drop_duplicates(),key=f"{i}_supply")
-          if key in choices:
-               choices[key].append(choice)
-          else:
-               choices[key] = choice
-
-
-     hist_ind = [True] * len(hist_df)
-     choices_not_null = {k: v for k, v in choices.items() if v}
-     for col, vals in choices_not_null.items():
-          hist_ind = hist_ind & (hist_df[col].isin(vals))
-          
-     compare_ind = [True] * len(compare)
-     choices_not_null = {k: v for k, v in choices.items() if v}
-     for col, vals in choices_not_null.items():
-          compare_ind = compare_ind & (compare[col].isin(vals))
-     
-     avg_sales_4wk = (hist_df[hist_ind & (hist_df['ds'] >= hist_start)]['y'].sum())/4
-     curr_oh = compare[compare_ind]['On Hand'].sum()
-     woc = curr_oh / avg_sales_4wk
-     fcast_sales_4wk = (compare[compare_ind][forecast_column].sum()/4)
-     fwos = curr_oh / fcast_sales_4wk
-     ttl_buy = compare[compare_ind]['Quantity to Meet Demand'].sum()
-     col1, col2, col3 = st.columns(3)
-     with col1:
-          st.metric(label="Quantity to Meet Forecasted Demand", value="{:,.0f} qty".format(ttl_buy))
-     with col2:
-          st.metric(label="Weeks of Cover (L4W)", value="{:,.0f} weeks".format(woc))
-     with col3:
-          st.metric(label="Weeks of Supply (Forecasted Next 4)", value="{:,.0f} weeks".format(fwos))
-     
-     fig = px.bar(compare[compare_ind].groupby(by=group_choice).agg({'Quantity to Meet Demand':'sum'}).reset_index(),x=group_choice,y='Quantity to Meet Demand')
-     st.plotly_chart(fig, key='agg_buys')
-     
-     st.dataframe(compare[compare_ind])
-     supply_df = compare.to_csv()
-     st.download_button(label="Download Supply Recommendations to CSV",
-                        data=supply_df,
-                        file_name="supply_recommendations.csv",
-                        mime="text/csv")
-
-with tab3:
      with st.form("feedback_form"):
           st.write("What do you think about this app?")
           star_rating = st.feedback("stars")
